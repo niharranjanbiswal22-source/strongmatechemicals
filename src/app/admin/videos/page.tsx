@@ -88,10 +88,14 @@ export default function AdminVideosPage() {
     setError(null);
 
     try {
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "y2m5kubk";
+      const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "strongmate_videos";
+
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("upload_preset", uploadPreset);
 
-      const res = await fetch("/api/admin/videos/upload", {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, {
         method: "POST",
         body: formData,
       });
@@ -99,10 +103,13 @@ export default function AdminVideosPage() {
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        throw new Error(data.error || "Failed to upload file");
+        throw new Error(data.error?.message || data.error || "Failed to upload file to Cloudinary CDN");
       }
 
-      setVideoUrl(data.url);
+      setVideoUrl(data.secure_url);
+      if (data.duration) {
+        setDuration(Math.round(data.duration));
+      }
       if (!title) {
         setTitle(file.name.replace(/\.[^/.]+$/, ""));
       }
