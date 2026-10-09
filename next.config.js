@@ -4,9 +4,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  outputFileTracingIncludes: {
-    '/api/**/*': ['./prisma/dev.db', './dev.db'],
-  },
   // Security Headers
   async headers() {
     return [
