@@ -17,6 +17,52 @@ import {
 import WatermarkOverlay from "./WatermarkOverlay";
 import ConfidentialModal from "./ConfidentialModal";
 
+function getEmbedInfo(url: string): { isEmbed: boolean; embedUrl: string } {
+  if (!url) return { isEmbed: false, embedUrl: "" };
+
+  // YouTube Links
+  if (url.includes("youtube.com") || url.includes("youtu.be")) {
+    let videoId = "";
+    if (url.includes("youtu.be/")) {
+      videoId = url.split("youtu.be/")[1]?.split("?")[0];
+    } else if (url.includes("watch?v=")) {
+      videoId = url.split("watch?v=")[1]?.split("&")[0];
+    } else if (url.includes("embed/")) {
+      videoId = url.split("embed/")[1]?.split("?")[0];
+    }
+    if (videoId) {
+      return {
+        isEmbed: true,
+        embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`,
+      };
+    }
+  }
+
+  // Google Drive Links
+  if (url.includes("drive.google.com")) {
+    const fileId = url.match(/\/d\/([^/]+)/)?.[1];
+    if (fileId) {
+      return {
+        isEmbed: true,
+        embedUrl: `https://drive.google.com/file/d/${fileId}/preview`,
+      };
+    }
+  }
+
+  // Vimeo Links
+  if (url.includes("vimeo.com")) {
+    const vimeoId = url.split("vimeo.com/")[1]?.split("?")[0];
+    if (vimeoId) {
+      return {
+        isEmbed: true,
+        embedUrl: `https://player.vimeo.com/video/${vimeoId}?autoplay=1`,
+      };
+    }
+  }
+
+  return { isEmbed: false, embedUrl: url };
+}
+
 interface VideoPlayerProps {
   videoId: string;
   videoTitle: string;
@@ -338,34 +384,49 @@ export default function VideoPlayer({
           </div>
         )}
 
-        {/* Video Element */}
-        {streamUrl && (
-          <video
-            ref={videoRef}
-            src={streamUrl}
-            playsInline
-            controlsList="nodownload noremoteplayback noplaybackrate"
-            disablePictureInPicture
-            onTimeUpdate={() => {
-              if (videoRef.current) {
-                setCurrentTime(videoRef.current.currentTime);
-              }
-            }}
-            onLoadedMetadata={() => {
-              if (videoRef.current) {
-                setDuration(videoRef.current.duration);
-              }
-            }}
-            onEnded={() => {
-              setIsPlaying(false);
-              if (videoRef.current) {
-                syncProgress(videoRef.current.duration, videoRef.current.duration);
-              }
-            }}
-            onClick={handlePlayPause}
-            className="w-full h-full object-contain cursor-pointer"
-          />
-        )}
+
+
+        {/* Video Element or iFrame Embed */}
+        {streamUrl && (() => {
+          const embedInfo = getEmbedInfo(streamUrl);
+          if (embedInfo.isEmbed) {
+            return (
+              <iframe
+                src={embedInfo.embedUrl}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full border-0 rounded-2xl"
+              />
+            );
+          }
+          return (
+            <video
+              ref={videoRef}
+              src={streamUrl}
+              playsInline
+              controlsList="nodownload noremoteplayback noplaybackrate"
+              disablePictureInPicture
+              onTimeUpdate={() => {
+                if (videoRef.current) {
+                  setCurrentTime(videoRef.current.currentTime);
+                }
+              }}
+              onLoadedMetadata={() => {
+                if (videoRef.current) {
+                  setDuration(videoRef.current.duration);
+                }
+              }}
+              onEnded={() => {
+                setIsPlaying(false);
+                if (videoRef.current) {
+                  syncProgress(videoRef.current.duration, videoRef.current.duration);
+                }
+              }}
+              onClick={handlePlayPause}
+              className="w-full h-full object-contain cursor-pointer"
+            />
+          );
+        })()}
 
         {/* Custom Controls Bar */}
         <div className="absolute bottom-0 inset-x-0 z-30 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 transition-opacity duration-300 opacity-90 group-hover:opacity-100">

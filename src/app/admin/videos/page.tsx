@@ -230,6 +230,15 @@ export default function AdminVideosPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 100 * 1024 * 1024) {
+      const sizeInMB = (file.size / (1024 * 1024)).toFixed(0);
+      const sizeInGB = (file.size / (1024 * 1024 * 1024)).toFixed(2);
+      setError(
+        `Selected file is ${sizeInGB} GB (${sizeInMB} MB). Cloudinary Free CDN limit is 100 MB per single file.\n\n💡 To host large 3GB - 7GB training videos for FREE with zero-buffer 4K streaming:\n1. Upload your video to YouTube (select Unlisted so it stays private).\n2. Copy the YouTube link and paste it in "Video Link / URL" box below!`
+      );
+      return;
+    }
+
     setUploadingFile(true);
     setUploadProgress(0);
     setError(null);
