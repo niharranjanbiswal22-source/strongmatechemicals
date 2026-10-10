@@ -391,12 +391,14 @@ export default function VideoPlayer({
           const embedInfo = getEmbedInfo(streamUrl);
           if (embedInfo.isEmbed) {
             return (
-              <iframe
-                src={embedInfo.embedUrl}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full border-0 rounded-2xl"
-              />
+              <div className="relative w-full h-full overflow-hidden rounded-2xl bg-black">
+                <iframe
+                  src={embedInfo.embedUrl}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-[calc(100%+55px)] -mt-[45px] border-0 rounded-2xl scale-[1.02] transform transition-transform"
+                />
+              </div>
             );
           }
           return (
@@ -428,8 +430,9 @@ export default function VideoPlayer({
           );
         })()}
 
-        {/* Custom Controls Bar */}
-        <div className="absolute bottom-0 inset-x-0 z-30 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 transition-opacity duration-300 opacity-90 group-hover:opacity-100">
+        {/* Custom Controls Bar (Only for direct HTML5 video files, hidden for embeds to prevent double controls) */}
+        {streamUrl && !getEmbedInfo(streamUrl).isEmbed && (
+          <div className="absolute bottom-0 inset-x-0 z-30 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 transition-opacity duration-300 opacity-90 group-hover:opacity-100">
           {/* Progress Seek Bar */}
           <div className="relative w-full mb-3 flex items-center">
             <input
@@ -495,6 +498,7 @@ export default function VideoPlayer({
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* Video Progress & Security Status Bar Below Player */}
