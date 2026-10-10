@@ -24,13 +24,19 @@ export default async function CourseCatalogPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
+      <div className="space-y-2">
         <h1 className="text-2xl sm:text-3xl font-extrabold text-white flex items-center gap-2">
           <BookOpen className="w-7 h-7 text-red-500" /> SCPL Training Courses Catalog
         </h1>
         <p className="text-xs sm:text-sm text-slate-400">
           Master construction chemicals, waterproofing technology, and Qlumate product application.
         </p>
+        <div className="p-3 bg-gradient-to-r from-amber-950/60 to-red-950/60 border border-amber-500/40 rounded-xl text-xs text-amber-300 font-semibold flex items-center gap-2">
+          <span>🏆</span>
+          <span>
+            <strong>Certificate Guarantee:</strong> Watch all 10 tutorial video lessons to 100% completion to automatically generate your official verified SCPL Training Certificate!
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -199,156 +199,146 @@ async function main() {
   }
   console.log("✅ Qlumate products created.");
 
-  // 5. Courses, Modules & Admin Uploaded Videos
-  const course1 = await prisma.course.create({
+  // 5. Single Master Course, Module & 10 Tutorial Videos
+  const masterCourse = await prisma.course.create({
     data: {
-      title: "Strongmate Company Orientation & Facilities",
-      description: "Comprehensive introduction to Strongmate Chemicals Pvt. Ltd., company history, corporate values, manufacturing units in Balasore (Odisha) and Udaipur (Rajasthan), and Qlumate brand vision.",
-      category: "Company Orientation",
-      difficulty: "Beginner",
-      estimatedDuration: "1.5 Hours",
+      title: "Strongmate Chemicals & Qlumate Complete Tutorial Program",
+      description: "Official 10-Lesson Master Training Course on Construction Chemicals, Waterproofing Technology, and Qlumate Product Application. Complete all 10 video lessons to generate your verified certificate.",
+      category: "Comprehensive Tutorial",
+      difficulty: "All Levels",
+      estimatedDuration: "3.5 Hours",
       trainerId: admin.id,
       status: "PUBLISHED",
-      thumbnail: "/images/courses/company-orientation.jpg",
+      thumbnail: "https://img.youtube.com/vi/Mgd-6KszT80/hqdefault.jpg",
     },
   });
 
-  const m1_1 = await prisma.module.create({
+  const masterModule = await prisma.module.create({
     data: {
-      courseId: course1.id,
-      title: "Module 1: Corporate Profile & Milestones",
-      description: "Company journey, vision, leadership, and ISO certification.",
+      courseId: masterCourse.id,
+      title: "Module 1: 10-Step Video Tutorial Series",
+      description: "Complete 10-step video tutorial series for SCPL joiners & applicator partners.",
       orderIndex: 1,
     },
   });
 
-  await prisma.video.createMany({
-    data: [
-      {
-        moduleId: m1_1.id,
-        title: "Welcome to Strongmate Chemicals & Qlumate Brand Story",
-        description: "Message from management, core mission in construction chemicals and Odisha/India manufacturing footprint.",
-        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-        thumbnailUrl: "/images/thumbnails/company-intro.jpg",
-        duration: 360,
-        completionThreshold: 90,
-        orderIndex: 1,
-      },
-      {
-        moduleId: m1_1.id,
-        title: "Balasore & Udaipur State-of-the-Art Manufacturing Infrastructure",
-        description: "Overview of polymer reactors, dry-mix plaster plants, R&D testing labs, and ISO 9001 quality compliance.",
-        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-        thumbnailUrl: "/images/thumbnails/factory.jpg",
-        duration: 480,
-        completionThreshold: 90,
-        orderIndex: 2,
-      },
-    ],
-  });
-
-  const course2 = await prisma.course.create({
-    data: {
-      title: "Construction Chemicals & Waterproofing Technology",
-      description: "In-depth technical training on water ingress mechanisms, concrete capillary porosity, dampness causes, structural waterproofing solutions, and substrate preparation standards.",
-      category: "Technical Science",
-      difficulty: "Intermediate",
-      estimatedDuration: "2.5 Hours",
-      trainerId: admin.id,
-      status: "PUBLISHED",
-      thumbnail: "/images/courses/waterproofing-tech.jpg",
-    },
-  });
-
-  const m2_1 = await prisma.module.create({
-    data: {
-      courseId: course2.id,
-      title: "Module 1: Fundamentals of Waterproofing Science",
-      description: "Understanding hydrostatic pressure, positive/negative side waterproofing, and membrane selection.",
-      orderIndex: 1,
-    },
-  });
-
-  await prisma.video.createMany({
-    data: [
-      {
-        moduleId: m2_1.id,
-        title: "Science of Water Damage & Efflorescence in Concrete Structures",
-        description: "Technical breakdown of capillary suction, chloride attack, salt crystallization, and structural spalling.",
-        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-        thumbnailUrl: "/images/thumbnails/water-science.jpg",
-        duration: 600,
-        completionThreshold: 90,
-        orderIndex: 1,
-      },
-      {
-        moduleId: m2_1.id,
-        title: "Surface Preparation & Crack Repair SOPs Before Application",
-        description: "Step-by-step substrate cleaning, surface saturation (SSD condition), V-groove crack cutting, and priming.",
-        videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-        thumbnailUrl: "/images/thumbnails/surface-prep.jpg",
-        duration: 540,
-        completionThreshold: 90,
-        orderIndex: 2,
-      },
-    ],
-  });
-
-  const course3 = await prisma.course.create({
-    data: {
-      title: "Qlumate Product Masterclass & Field Application",
-      description: "Complete product line training covering Qlumate Black Guard, White Guard, SBR Latex, QLW-100 Admixture, Epoxy Grouts, and Wall Putty.",
-      category: "Qlumate Product Academy",
-      difficulty: "Advanced",
-      estimatedDuration: "3 Hours",
-      trainerId: admin.id,
-      status: "PUBLISHED",
-      thumbnail: "/images/courses/qlumate-masterclass.jpg",
-    },
-  });
-
-  const m3_1 = await prisma.module.create({
-    data: {
-      courseId: course3.id,
-      title: "Module 1: Waterproofing & Bonding Product Line",
-      description: "Black Guard, White Guard, and SBR Latex deep dive.",
-      orderIndex: 1,
-    },
-  });
-
-  const v3_1 = await prisma.video.create({
-    data: {
-      moduleId: m3_1.id,
-      title: "Qlumate Black Guard & White Guard Application Training",
-      description: "Method statement, mixing ratios, wet film thickness measurement, mesh embedding, and water ponding test.",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-      thumbnailUrl: "/images/thumbnails/black-guard-app.jpg",
-      duration: 720,
+  const tutorialVideos = [
+    {
+      title: "1. Welcome to Strongmate Chemicals & Qlumate Brand Story",
+      description: "Message from management, core mission in construction chemicals, and Odisha/India manufacturing footprint.",
+      videoUrl: "https://youtu.be/Mgd-6KszT80",
+      thumbnailUrl: "https://img.youtube.com/vi/Mgd-6KszT80/hqdefault.jpg",
+      duration: 360,
       completionThreshold: 90,
       orderIndex: 1,
     },
-  });
-
-  const v3_2 = await prisma.video.create({
-    data: {
-      moduleId: m3_1.id,
-      title: "Qlumate QLW-100 Integral Waterproofing & SBR Mortar Demo",
-      description: "Batching dosage calculations for site concrete mixers, slump retention, and polymer mortar bonding test.",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoylines.mp4",
-      thumbnailUrl: "/images/thumbnails/qlw100-demo.jpg",
+    {
+      title: "2. Balasore & Udaipur State-of-the-Art Manufacturing Infrastructure",
+      description: "Overview of polymer reactors, dry-mix plaster plants, R&D testing labs, and ISO 9001 quality compliance.",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+      thumbnailUrl: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800",
       duration: 480,
       completionThreshold: 90,
       orderIndex: 2,
     },
-  });
+    {
+      title: "3. Science of Water Damage & Efflorescence in Concrete Structures",
+      description: "Technical breakdown of capillary suction, chloride attack, salt crystallization, and structural spalling.",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+      thumbnailUrl: "https://images.unsplash.com/photo-1541888946425-d0fbb186a5b7?w=800",
+      duration: 600,
+      completionThreshold: 90,
+      orderIndex: 3,
+    },
+    {
+      title: "4. Surface Preparation & Substrate Saturation (SSD) Standard SOP",
+      description: "Step-by-step substrate cleaning, surface saturation (SSD condition), V-groove crack cutting, and priming.",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+      thumbnailUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800",
+      duration: 540,
+      completionThreshold: 90,
+      orderIndex: 4,
+    },
+    {
+      title: "5. Qlumate Black Guard Coal-Tar & Acrylic Waterproofing Application",
+      description: "Method statement, mixing ratios, wet film thickness measurement, mesh embedding, and water ponding test.",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+      thumbnailUrl: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800",
+      duration: 720,
+      completionThreshold: 90,
+      orderIndex: 5,
+    },
+    {
+      title: "6. Qlumate White Guard Solar Thermal Shield Roof Coating SOP",
+      description: "High Solar Reflective Index (SRI > 105) terrace roof coating procedure for thermal insulation.",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoylines.mp4",
+      thumbnailUrl: "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800",
+      duration: 600,
+      completionThreshold: 90,
+      orderIndex: 6,
+    },
+    {
+      title: "7. Qlumate SBR Polymer Bonding Agent & Waterproof Repair Mortar Demo",
+      description: "Polymer modified slurry coat for bonding old concrete to new mortar and spalling repairs.",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+      thumbnailUrl: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=800",
+      duration: 540,
+      completionThreshold: 90,
+      orderIndex: 7,
+    },
+    {
+      title: "8. Qlumate QLW-100 Hydrophobic Integral Concrete Waterproofing",
+      description: "Batching dosage calculations (200ml / 50kg bag) for site concrete mixers and slump retention.",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+      thumbnailUrl: "https://images.unsplash.com/photo-1590069261209-f8e9b8642343?w=800",
+      duration: 480,
+      completionThreshold: 90,
+      orderIndex: 8,
+    },
+    {
+      title: "9. Qlumate Silk Plaster & Smooth Water-Resistant Wall Putty Guide",
+      description: "Application of polymer-based smooth wall putty for interior and exterior concrete walls.",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutback2012.mp4",
+      thumbnailUrl: "https://images.unsplash.com/photo-1562259949-e8e7689d7828?w=800",
+      duration: 450,
+      completionThreshold: 90,
+      orderIndex: 9,
+    },
+    {
+      title: "10. Qlumate Epoxy Tile Grout & Joint Waterproof Sealing Masterclass",
+      description: "Heavy-duty 3-part epoxy tile joint filling for hygienic, stain-proof, waterproof tile grouting.",
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+      thumbnailUrl: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800",
+      duration: 600,
+      completionThreshold: 90,
+      orderIndex: 10,
+    },
+  ];
 
-  console.log("✅ Courses, Modules & Videos created.");
+  const createdVideos = [];
+  for (const v of tutorialVideos) {
+    const createdVid = await prisma.video.create({
+      data: {
+        moduleId: masterModule.id,
+        title: v.title,
+        description: v.description,
+        videoUrl: v.videoUrl,
+        thumbnailUrl: v.thumbnailUrl,
+        duration: v.duration,
+        completionThreshold: v.completionThreshold,
+        orderIndex: v.orderIndex,
+      },
+    });
+    createdVideos.push(createdVid);
+  }
+
+  console.log("✅ 1 Master Course with 10 Tutorial Videos created.");
 
   // 6. Quizzes
   const quiz1 = await prisma.quiz.create({
     data: {
-      courseId: course3.id,
-      moduleId: m3_1.id,
+      courseId: masterCourse.id,
+      moduleId: masterModule.id,
       title: "Qlumate Product Mastery & Application Assessment",
       passingScore: 80,
       timeLimitMinutes: 15,
@@ -431,28 +421,28 @@ async function main() {
         category: "Catalog",
         fileUrl: "/documents/Qlumate-Full-Product-Catalog.pdf",
         isDownloadable: true,
-        courseId: course3.id,
+        courseId: masterCourse.id,
       },
       {
         title: "Waterproofing Application Method Statement & SOP",
         category: "SOP",
         fileUrl: "/documents/Waterproofing-SOP-Strongmate.pdf",
         isDownloadable: true,
-        courseId: course2.id,
+        courseId: masterCourse.id,
       },
       {
         title: "Qlumate QLW-100 Technical Data Sheet (TDS)",
         category: "TDS",
         fileUrl: "/documents/Qlumate-QLW100-TDS.pdf",
         isDownloadable: true,
-        courseId: course3.id,
+        courseId: masterCourse.id,
       },
       {
         title: "Material Safety Data Sheet (MSDS) - Chemical Handling",
         category: "Safety",
         fileUrl: "/documents/Chemical-Safety-MSDS-Strongmate.pdf",
         isDownloadable: false,
-        courseId: course1.id,
+        courseId: masterCourse.id,
       },
     ],
   });
@@ -461,38 +451,19 @@ async function main() {
   await prisma.enrollment.create({
     data: {
       userId: learner1.id,
-      courseId: course1.id,
-      status: "COMPLETED",
-      progress: 100,
-      completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    },
-  });
-
-  await prisma.enrollment.create({
-    data: {
-      userId: learner1.id,
-      courseId: course2.id,
+      courseId: masterCourse.id,
       status: "ENROLLED",
-      progress: 50,
-    },
-  });
-
-  await prisma.enrollment.create({
-    data: {
-      userId: learner1.id,
-      courseId: course3.id,
-      status: "ENROLLED",
-      progress: 68,
+      progress: 30,
     },
   });
 
   await prisma.videoProgress.create({
     data: {
       userId: learner1.id,
-      videoId: v3_1.id,
-      courseId: course3.id,
-      watchedPercentage: 95,
-      lastPosition: 684.0,
+      videoId: createdVideos[0].id,
+      courseId: masterCourse.id,
+      watchedPercentage: 100,
+      lastPosition: 360.0,
       isCompleted: true,
       device: "Chrome / Windows 11",
       ipAddress: "103.211.14.88 (Bhubaneswar, IN)",
@@ -502,11 +473,24 @@ async function main() {
   await prisma.videoProgress.create({
     data: {
       userId: learner1.id,
-      videoId: v3_2.id,
-      courseId: course3.id,
-      watchedPercentage: 45,
-      lastPosition: 216.0,
-      isCompleted: false,
+      videoId: createdVideos[1].id,
+      courseId: masterCourse.id,
+      watchedPercentage: 100,
+      lastPosition: 480.0,
+      isCompleted: true,
+      device: "Chrome / Windows 11",
+      ipAddress: "103.211.14.88 (Bhubaneswar, IN)",
+    },
+  });
+
+  await prisma.videoProgress.create({
+    data: {
+      userId: learner1.id,
+      videoId: createdVideos[2].id,
+      courseId: masterCourse.id,
+      watchedPercentage: 100,
+      lastPosition: 600.0,
+      isCompleted: true,
       device: "Chrome / Windows 11",
       ipAddress: "103.211.14.88 (Bhubaneswar, IN)",
     },
@@ -517,7 +501,7 @@ async function main() {
     data: {
       certificateId: "SMC-QP-2026-00125",
       userId: learner1.id,
-      courseId: course1.id,
+      courseId: masterCourse.id,
       issueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
       qrCodeData: `https://strongmatechemicals.com/verify-certificate?id=SMC-QP-2026-00125`,
     },
