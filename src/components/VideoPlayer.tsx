@@ -136,6 +136,12 @@ export default function VideoPlayer({
 
   // Deterrence: Tab focus / window blur detection
   useEffect(() => {
+    // If current video is YouTube/Drive embed, skip tab blur/focus listeners so seeking never pauses video
+    if (streamUrl && getEmbedInfo(streamUrl).isEmbed) {
+      setIsTabUnfocused(false);
+      return;
+    }
+
     const handleVisibilityChange = () => {
       if (document.hidden) {
         setIsTabUnfocused(true);
@@ -149,10 +155,6 @@ export default function VideoPlayer({
     };
 
     const handleBlur = () => {
-      // Do not pause if focus shifted inside iframe controls (seeking/clicking player)
-      if (typeof document !== "undefined" && document.activeElement && document.activeElement.tagName === "IFRAME") {
-        return;
-      }
       setIsTabUnfocused(true);
       if (videoRef.current && !videoRef.current.paused) {
         videoRef.current.pause();
@@ -173,7 +175,7 @@ export default function VideoPlayer({
       window.removeEventListener("blur", handleBlur);
       window.removeEventListener("focus", handleFocus);
     };
-  }, []);
+  }, [streamUrl]);
 
   // Periodic Progress Sync to Server
   useEffect(() => {
@@ -400,7 +402,7 @@ export default function VideoPlayer({
                   src={embedInfo.embedUrl}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
-                  className="w-full h-[calc(100%+95px)] -mt-[48px] -mb-[47px] border-0 rounded-2xl scale-[1.01] transform transition-transform"
+                  className="w-full h-[calc(100%+120px)] -mt-[58px] -mb-[62px] border-0 rounded-2xl scale-[1.03] transform transition-transform"
                 />
               </div>
             );
