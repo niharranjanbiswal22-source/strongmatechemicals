@@ -91,30 +91,57 @@ export default function AdminVideosPage() {
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "y2m5kubk";
       const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "strongmate_videos";
 
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", uploadPreset);
+      let uploadedUrl = "";
+      let durationVal = 300;
 
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, {
-        method: "POST",
-        body: formData,
-      });
+      // Attempt 1: Direct Cloudinary auto/upload
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", uploadPreset);
 
-      const data = await res.json();
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
+          method: "POST",
+          body: formData,
+        });
 
-      if (!res.ok || data.error) {
-        throw new Error(data.error?.message || data.error || "Failed to upload file to Cloudinary CDN");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.secure_url) {
+            uploadedUrl = data.secure_url;
+            if (data.duration) durationVal = Math.round(data.duration);
+          }
+        }
+      } catch (cldErr) {
+        console.warn("Direct Cloudinary upload hit network restriction, switching to server proxy...", cldErr);
       }
 
-      setVideoUrl(data.secure_url);
-      if (data.duration) {
-        setDuration(Math.round(data.duration));
+      // Attempt 2: Fallback to Server Proxy route
+      if (!uploadedUrl) {
+        const proxyFormData = new FormData();
+        proxyFormData.append("file", file);
+
+        const serverRes = await fetch("/api/admin/videos/upload", {
+          method: "POST",
+          body: proxyFormData,
+        });
+
+        const serverData = await serverRes.json();
+        if (!serverRes.ok || serverData.error) {
+          throw new Error(serverData.error || "Failed to upload video file");
+        }
+
+        uploadedUrl = serverData.url;
+        if (serverData.duration) durationVal = serverData.duration;
       }
+
+      setVideoUrl(uploadedUrl);
+      setDuration(durationVal);
       if (!title) {
         setTitle(file.name.replace(/\.[^/.]+$/, ""));
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Failed to upload video file");
     } finally {
       setUploadingFile(false);
     }
