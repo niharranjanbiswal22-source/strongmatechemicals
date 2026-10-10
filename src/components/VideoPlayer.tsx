@@ -149,6 +149,10 @@ export default function VideoPlayer({
     };
 
     const handleBlur = () => {
+      // Do not pause if focus shifted inside iframe controls (seeking/clicking player)
+      if (typeof document !== "undefined" && document.activeElement && document.activeElement.tagName === "IFRAME") {
+        return;
+      }
       setIsTabUnfocused(true);
       if (videoRef.current && !videoRef.current.paused) {
         videoRef.current.pause();
@@ -396,7 +400,7 @@ export default function VideoPlayer({
                   src={embedInfo.embedUrl}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
-                  className="w-full h-[calc(100%+55px)] -mt-[45px] border-0 rounded-2xl scale-[1.02] transform transition-transform"
+                  className="w-full h-[calc(100%+95px)] -mt-[48px] -mb-[47px] border-0 rounded-2xl scale-[1.01] transform transition-transform"
                 />
               </div>
             );
