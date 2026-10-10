@@ -75,6 +75,7 @@ export default async function WatchVideoPage({
           initialPosition={initialPos}
           empName={user.name}
           empId={user.empId}
+          posterUrl={video.thumbnailUrl || undefined}
           sessionId={user.sessionId}
         />
 

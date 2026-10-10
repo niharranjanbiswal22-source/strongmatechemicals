@@ -120,13 +120,30 @@ export default async function CourseDetailsPage({
                     className="bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-slate-700 transition"
                   >
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-red-950/80 border border-red-800/60 flex items-center justify-center text-red-400 shrink-0 mt-0.5">
-                        {isCompleted ? (
-                          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                        ) : (
-                          <Play className="w-4 h-4 fill-current" />
-                        )}
-                      </div>
+                      {vid.thumbnailUrl ? (
+                        <div className="relative w-24 h-16 rounded-xl overflow-hidden bg-slate-900 border border-slate-800 shrink-0 shadow">
+                          <img
+                            src={vid.thumbnailUrl}
+                            alt={vid.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            {isCompleted ? (
+                              <CheckCircle2 className="w-5 h-5 text-emerald-400 fill-black/60" />
+                            ) : (
+                              <Play className="w-4 h-4 text-white fill-current" />
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl bg-red-950/80 border border-red-800/60 flex items-center justify-center text-red-400 shrink-0 mt-0.5">
+                          {isCompleted ? (
+                            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                          ) : (
+                            <Play className="w-4 h-4 fill-current" />
+                          )}
+                        </div>
+                      )}
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <h4 className="text-sm font-bold text-white">{vid.title}</h4>

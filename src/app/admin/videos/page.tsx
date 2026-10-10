@@ -42,11 +42,20 @@ export default function AdminVideosPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [duration, setDuration] = useState(300);
   const [completionThreshold, setCompletionThreshold] = useState(90);
   const [courseId, setCourseId] = useState("");
   const [moduleId, setModuleId] = useState("");
   const [newModuleName, setNewModuleName] = useState("");
+
+  const getYouTubeThumbnail = (url: string) => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return match && match[2].length === 11
+      ? `https://img.youtube.com/vi/${match[2]}/hqdefault.jpg`
+      : "";
+  };
 
   const [uploadingFile, setUploadingFile] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -272,6 +281,7 @@ export default function AdminVideosPage() {
     setError(null);
 
     try {
+      const finalThumbnail = thumbnailUrl || getYouTubeThumbnail(videoUrl);
       const res = await fetch("/api/admin/videos", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -279,6 +289,7 @@ export default function AdminVideosPage() {
           title,
           description,
           videoUrl,
+          thumbnailUrl: finalThumbnail,
           duration,
           completionThreshold,
           courseId,
@@ -296,6 +307,7 @@ export default function AdminVideosPage() {
       setTitle("");
       setDescription("");
       setVideoUrl("");
+      setThumbnailUrl("");
       fetchData();
     } catch (err: any) {
       setError(err.message);
@@ -462,11 +474,34 @@ export default function AdminVideosPage() {
                 <input
                   type="text"
                   required
-                  placeholder="https://.../video.mp4 or /uploads/video.mp4"
+                  placeholder="https://youtu.be/... or Cloudinary URL"
                   value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
+                  onChange={(e) => {
+                    const newUrl = e.target.value;
+                    setVideoUrl(newUrl);
+                    if (!thumbnailUrl) {
+                      const ytThumb = getYouTubeThumbnail(newUrl);
+                      if (ytThumb) setThumbnailUrl(ytThumb);
+                    }
+                  }}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white font-mono text-xs"
                 />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">
+                  🖼️ Video Cover Poster / Thumbnail Image URL (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="https://.../cover.jpg (Auto-generated for YouTube links)"
+                  value={thumbnailUrl}
+                  onChange={(e) => setThumbnailUrl(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white font-mono text-xs"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Shows as the video thumbnail cover card before play. YouTube links auto-detect cover image.
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

@@ -69,6 +69,7 @@ interface VideoPlayerProps {
   initialPosition?: number;
   empName: string;
   empId: string;
+  posterUrl?: string;
   sessionId?: string;
   ipAddress?: string;
   onCompleted?: () => void;
@@ -80,6 +81,7 @@ export default function VideoPlayer({
   initialPosition = 0,
   empName,
   empId,
+  posterUrl,
   sessionId,
   ipAddress,
   onCompleted,
@@ -411,6 +413,7 @@ export default function VideoPlayer({
             <video
               ref={videoRef}
               src={streamUrl}
+              poster={posterUrl || undefined}
               playsInline
               controlsList="nodownload noremoteplayback noplaybackrate"
               disablePictureInPicture
