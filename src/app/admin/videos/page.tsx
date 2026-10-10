@@ -49,6 +49,7 @@ export default function AdminVideosPage() {
   const [newModuleName, setNewModuleName] = useState("");
 
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,67 +81,79 @@ export default function AdminVideosPage() {
     fetchData();
   }, []);
 
+  const uploadToCloudinaryXHR = (
+    file: File,
+    cloudName: string,
+    uploadPreset: string,
+    onProgress: (percent: number) => void
+  ): Promise<{ secure_url: string; duration?: number }> => {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", uploadPreset);
+
+      const url = `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`;
+      xhr.open("POST", url, true);
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          onProgress(percent);
+        }
+      };
+
+      xhr.onload = () => {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300 && data.secure_url) {
+            resolve(data);
+          } else {
+            const msg = data.error?.message || `Cloudinary upload status ${xhr.status}`;
+            reject(new Error(msg));
+          }
+        } catch (err) {
+          reject(new Error(`Cloudinary upload failed (${xhr.status})`));
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(new Error("Network connection error during video upload. Please check your internet connection."));
+      };
+
+      xhr.ontimeout = () => {
+        reject(new Error("Video upload timed out. Please try uploading again."));
+      };
+
+      xhr.send(formData);
+    });
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploadingFile(true);
+    setUploadProgress(0);
     setError(null);
 
     try {
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "y2m5kubk";
       const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "strongmate_videos";
 
-      let uploadedUrl = "";
-      let durationVal = 300;
+      const data = await uploadToCloudinaryXHR(file, cloudName, uploadPreset, (percent) => {
+        setUploadProgress(percent);
+      });
 
-      // Attempt 1: Direct Cloudinary auto/upload
-      try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", uploadPreset);
-
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`, {
-          method: "POST",
-          body: formData,
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.secure_url) {
-            uploadedUrl = data.secure_url;
-            if (data.duration) durationVal = Math.round(data.duration);
-          }
-        }
-      } catch (cldErr) {
-        console.warn("Direct Cloudinary upload hit network restriction, switching to server proxy...", cldErr);
+      setVideoUrl(data.secure_url);
+      if (data.duration) {
+        setDuration(Math.round(data.duration));
       }
-
-      // Attempt 2: Fallback to Server Proxy route
-      if (!uploadedUrl) {
-        const proxyFormData = new FormData();
-        proxyFormData.append("file", file);
-
-        const serverRes = await fetch("/api/admin/videos/upload", {
-          method: "POST",
-          body: proxyFormData,
-        });
-
-        const serverData = await serverRes.json();
-        if (!serverRes.ok || serverData.error) {
-          throw new Error(serverData.error || "Failed to upload video file");
-        }
-
-        uploadedUrl = serverData.url;
-        if (serverData.duration) durationVal = serverData.duration;
-      }
-
-      setVideoUrl(uploadedUrl);
-      setDuration(durationVal);
       if (!title) {
         setTitle(file.name.replace(/\.[^/.]+$/, ""));
       }
     } catch (err: any) {
+      console.error("Video upload error:", err);
       setError(err.message || "Failed to upload video file");
     } finally {
       setUploadingFile(false);
@@ -312,9 +325,18 @@ export default function AdminVideosPage() {
                   className="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-red-600 file:text-white hover:file:bg-red-500 cursor-pointer"
                 />
                 {uploadingFile && (
-                  <p className="text-[11px] text-amber-400 font-semibold animate-pulse pt-1">
-                    ⏳ Uploading video file from your computer to portal... Please wait.
-                  </p>
+                  <div className="space-y-1.5 pt-2">
+                    <div className="flex justify-between text-[11px] text-amber-400 font-semibold">
+                      <span>⏳ Uploading video to Cloudinary CDN...</span>
+                      <span>{uploadProgress}%</span>
+                    </div>
+                    <div className="w-full bg-slate-900 rounded-full h-2 overflow-hidden border border-slate-800">
+                      <div
+                        className="bg-gradient-to-r from-red-600 via-amber-500 to-emerald-400 h-full transition-all duration-300 rounded-full"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
 
