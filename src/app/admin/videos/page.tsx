@@ -81,35 +81,25 @@ export default function AdminVideosPage() {
     fetchData();
   }, []);
 
-  const uploadToCloudinaryXHR = (
+  const uploadVideoChunked = async (
     file: File,
     cloudName: string,
     uploadPreset: string,
     onProgress: (percent: number) => void
   ): Promise<{ secure_url: string; duration?: number }> => {
-    const endpoints = [
-      `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
-      `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
-      `https://api.cloudinary.com/v1_1/${cloudName}/upload`,
-    ];
-
-    const tryEndpoint = (index: number): Promise<{ secure_url: string; duration?: number }> => {
+    // If file is smaller than 6MB, send in one request
+    if (file.size <= 6 * 1024 * 1024) {
       return new Promise((resolve, reject) => {
-        if (index >= endpoints.length) {
-          return reject(new Error("Unable to reach Cloudinary CDN. Please check network connection or use Cloudinary Upload Studio."));
-        }
-
         const xhr = new XMLHttpRequest();
         const formData = new FormData();
         formData.append("file", file);
         formData.append("upload_preset", uploadPreset);
 
-        xhr.open("POST", endpoints[index], true);
+        xhr.open("POST", `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, true);
 
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
-            const percent = Math.round((e.loaded / e.total) * 100);
-            onProgress(percent);
+            onProgress(Math.round((e.loaded / e.total) * 100));
           }
         };
 
@@ -117,30 +107,83 @@ export default function AdminVideosPage() {
           try {
             const data = JSON.parse(xhr.responseText);
             if (xhr.status >= 200 && xhr.status < 300 && data.secure_url) {
-              resolve(data);
+              resolve({
+                secure_url: data.secure_url,
+                duration: data.duration ? Math.round(data.duration) : 300,
+              });
             } else {
-              // Try next endpoint if this one returned error
-              tryEndpoint(index + 1).then(resolve).catch(reject);
+              reject(new Error(data.error?.message || `Cloudinary returned status ${xhr.status}`));
             }
           } catch (err) {
-            tryEndpoint(index + 1).then(resolve).catch(reject);
+            reject(new Error("Upload failed. Try using Cloudinary Popup Studio."));
           }
         };
 
-        xhr.onerror = () => {
-          // Try next endpoint on network error
-          tryEndpoint(index + 1).then(resolve).catch(reject);
-        };
-
-        xhr.ontimeout = () => {
-          tryEndpoint(index + 1).then(resolve).catch(reject);
-        };
-
+        xhr.onerror = () => reject(new Error("Network error during video upload."));
         xhr.send(formData);
       });
-    };
+    }
 
-    return tryEndpoint(0);
+    // For files > 6MB: Send in 5MB Chunks to prevent Cloudinary unsigned size limits
+    const chunkSize = 5 * 1024 * 1024;
+    const totalChunks = Math.ceil(file.size / chunkSize);
+    const uniqueUploadId = `cld_upload_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+    let finalSecureUrl = "";
+    let finalDuration = 300;
+
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * chunkSize;
+      const end = Math.min(start + chunkSize, file.size);
+      const chunk = file.slice(start, end);
+
+      const formData = new FormData();
+      formData.append("file", chunk);
+      formData.append("upload_preset", uploadPreset);
+
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`, true);
+        xhr.setRequestHeader("Content-Range", `bytes ${start}-${end - 1}/${file.size}`);
+        xhr.setRequestHeader("X-Unique-Upload-Id", uniqueUploadId);
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const chunkProgress = e.loaded / e.total;
+            const overallPercent = Math.round(((i + chunkProgress) / totalChunks) * 100);
+            onProgress(overallPercent);
+          }
+        };
+
+        xhr.onload = () => {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (xhr.status >= 200 && xhr.status < 300) {
+              if (data.secure_url) {
+                finalSecureUrl = data.secure_url;
+                if (data.duration) finalDuration = Math.round(data.duration);
+              }
+              resolve();
+            } else {
+              reject(new Error(data.error?.message || `Chunk ${i + 1} upload failed (${xhr.status})`));
+            }
+          } catch (err) {
+            reject(new Error(`Failed to process chunk ${i + 1} response`));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error("Network connection drop during video chunk upload."));
+        xhr.send(formData);
+      });
+
+      onProgress(Math.round(((i + 1) / totalChunks) * 100));
+    }
+
+    if (!finalSecureUrl) {
+      throw new Error("Video upload completed but URL missing. Please try again.");
+    }
+
+    return { secure_url: finalSecureUrl, duration: finalDuration };
   };
 
   const openCloudinaryWidget = () => {
@@ -195,7 +238,7 @@ export default function AdminVideosPage() {
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "y2m5kubk";
       const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "strongmate_videos";
 
-      const data = await uploadToCloudinaryXHR(file, cloudName, uploadPreset, (percent) => {
+      const data = await uploadVideoChunked(file, cloudName, uploadPreset, (percent) => {
         setUploadProgress(percent);
       });
 
