@@ -342,14 +342,6 @@ export default function VideoPlayer({
         onContextMenu={(e) => e.preventDefault()}
         className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl border border-slate-800 select-none group"
       >
-        {/* Dynamic Watermark Overlay */}
-        <WatermarkOverlay
-          empName={empName}
-          empId={empId}
-          sessionId={sessionId}
-          ipAddress={ipAddress}
-        />
-
         {/* Focus Loss / Window Blur Security Pause Banner */}
         {isTabUnfocused && (
           <div className="absolute inset-0 z-40 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center text-center p-6 text-white animate-in fade-in">
