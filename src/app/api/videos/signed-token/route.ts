@@ -66,11 +66,17 @@ export async function POST(req: NextRequest) {
       userAgent: req.headers.get("user-agent") || "Browser Client",
     });
 
+    // For external URLs (YouTube, Cloudinary, Drive, Vimeo, MP4 links), return direct videoUrl for embed rendering
+    const finalStreamUrl =
+      video.videoUrl && (video.videoUrl.startsWith("http://") || video.videoUrl.startsWith("https://"))
+        ? video.videoUrl
+        : `/api/videos/stream?token=${encodeURIComponent(token)}`;
+
     return NextResponse.json({
       success: true,
       signedToken: token,
       expiresInSeconds: 60,
-      streamUrl: `/api/videos/stream?token=${encodeURIComponent(token)}`,
+      streamUrl: finalStreamUrl,
     });
   } catch (error) {
     console.error("Signed token error:", error);
