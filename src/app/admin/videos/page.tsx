@@ -87,46 +87,100 @@ export default function AdminVideosPage() {
     uploadPreset: string,
     onProgress: (percent: number) => void
   ): Promise<{ secure_url: string; duration?: number }> => {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", uploadPreset);
+    const endpoints = [
+      `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
+      `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
+      `https://api.cloudinary.com/v1_1/${cloudName}/upload`,
+    ];
 
-      const url = `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`;
-      xhr.open("POST", url, true);
-
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          const percent = Math.round((e.loaded / e.total) * 100);
-          onProgress(percent);
+    const tryEndpoint = (index: number): Promise<{ secure_url: string; duration?: number }> => {
+      return new Promise((resolve, reject) => {
+        if (index >= endpoints.length) {
+          return reject(new Error("Unable to reach Cloudinary CDN. Please check network connection or use Cloudinary Upload Studio."));
         }
-      };
 
-      xhr.onload = () => {
-        try {
-          const data = JSON.parse(xhr.responseText);
-          if (xhr.status >= 200 && xhr.status < 300 && data.secure_url) {
-            resolve(data);
-          } else {
-            const msg = data.error?.message || `Cloudinary upload status ${xhr.status}`;
-            reject(new Error(msg));
+        const xhr = new XMLHttpRequest();
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", uploadPreset);
+
+        xhr.open("POST", endpoints[index], true);
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const percent = Math.round((e.loaded / e.total) * 100);
+            onProgress(percent);
           }
-        } catch (err) {
-          reject(new Error(`Cloudinary upload failed (${xhr.status})`));
-        }
-      };
+        };
 
-      xhr.onerror = () => {
-        reject(new Error("Network connection error during video upload. Please check your internet connection."));
-      };
+        xhr.onload = () => {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (xhr.status >= 200 && xhr.status < 300 && data.secure_url) {
+              resolve(data);
+            } else {
+              // Try next endpoint if this one returned error
+              tryEndpoint(index + 1).then(resolve).catch(reject);
+            }
+          } catch (err) {
+            tryEndpoint(index + 1).then(resolve).catch(reject);
+          }
+        };
 
-      xhr.ontimeout = () => {
-        reject(new Error("Video upload timed out. Please try uploading again."));
-      };
+        xhr.onerror = () => {
+          // Try next endpoint on network error
+          tryEndpoint(index + 1).then(resolve).catch(reject);
+        };
 
-      xhr.send(formData);
-    });
+        xhr.ontimeout = () => {
+          tryEndpoint(index + 1).then(resolve).catch(reject);
+        };
+
+        xhr.send(formData);
+      });
+    };
+
+    return tryEndpoint(0);
+  };
+
+  const openCloudinaryWidget = () => {
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "y2m5kubk";
+    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "strongmate_videos";
+
+    const launchWidget = () => {
+      if (typeof window !== "undefined" && (window as any).cloudinary) {
+        const widget = (window as any).cloudinary.createUploadWidget(
+          {
+            cloudName,
+            uploadPreset,
+            resourceType: "video",
+            sources: ["local", "url", "camera"],
+            multiple: false,
+          },
+          (error: any, result: any) => {
+            if (!error && result && result.event === "success") {
+              setVideoUrl(result.info.secure_url);
+              if (result.info.duration) {
+                setDuration(Math.round(result.info.duration));
+              }
+              if (!title && result.info.original_filename) {
+                setTitle(result.info.original_filename.replace(/_/g, " "));
+              }
+            }
+          }
+        );
+        widget.open();
+      }
+    };
+
+    if (typeof window !== "undefined" && !(window as any).cloudinary) {
+      const script = document.createElement("script");
+      script.src = "https://upload-widget.cloudinary.com/global/all.js";
+      script.onload = launchWidget;
+      document.body.appendChild(script);
+    } else {
+      launchWidget();
+    }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -154,7 +208,7 @@ export default function AdminVideosPage() {
       }
     } catch (err: any) {
       console.error("Video upload error:", err);
-      setError(err.message || "Failed to upload video file");
+      setError(err.message || "Upload failed. Try using Cloudinary Upload Studio widget below.");
     } finally {
       setUploadingFile(false);
     }
@@ -338,6 +392,17 @@ export default function AdminVideosPage() {
                     </div>
                   </div>
                 )}
+
+                <div className="pt-2 border-t border-slate-800/80 mt-2">
+                  <p className="text-[11px] text-slate-400 mb-1.5 font-medium">Or use official Cloudinary Upload Widget:</p>
+                  <button
+                    type="button"
+                    onClick={openCloudinaryWidget}
+                    className="w-full py-2.5 px-3 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-slate-100 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow"
+                  >
+                    ☁️ Open Cloudinary Upload Studio (Popup Widget)
+                  </button>
+                </div>
               </div>
 
               <div>
