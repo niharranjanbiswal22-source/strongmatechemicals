@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
   // Register Form States
   const [regName, setRegName] = useState("");
@@ -114,17 +115,13 @@ export default function LoginPage() {
     }
   };
 
-  const loginAsDemo = (userType: "learner" | "admin") => {
+  const fillAdminEmail = () => {
     setError(null);
     setSuccessMsg(null);
     setActiveTab("login");
-    if (userType === "learner") {
-      setUsername("SMC1001");
-      setPassword("ChangeMe@123");
-    } else {
-      setUsername("admin@strongmatechemicals.com");
-      setPassword("ChangeMe@123");
-    }
+    setUsername("admin@strongmatechemicals.com");
+    setPassword(""); // strictly blank, never auto-fill password
+    setIsPasswordFocused(true);
   };
 
   return (
@@ -318,6 +315,9 @@ export default function LoginPage() {
                     type={showPassword ? "text" : "password"}
                     name="portal_user_security_key"
                     id="portal_user_security_key"
+                    readOnly={!isPasswordFocused}
+                    onFocus={() => setIsPasswordFocused(true)}
+                    onClick={() => setIsPasswordFocused(true)}
                     autoComplete="new-password"
                     autoCorrect="off"
                     autoCapitalize="none"
@@ -356,6 +356,18 @@ export default function LoginPage() {
                   </>
                 )}
               </button>
+
+              {/* Admin Sign In Quick Fill (Only fills email, password remains strictly empty) */}
+              <div className="pt-2 text-center">
+                <button
+                  type="button"
+                  onClick={fillAdminEmail}
+                  className="text-xs text-slate-400 hover:text-red-400 transition inline-flex items-center gap-1.5"
+                >
+                  <Lock className="w-3.5 h-3.5 text-red-500" />
+                  <span>Admin Sign In (admin@strongmatechemicals.com)</span>
+                </button>
+              </div>
             </form>
           ) : (
             /* CREATE ACCOUNT FORM */
