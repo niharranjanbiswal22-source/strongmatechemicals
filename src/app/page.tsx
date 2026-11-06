@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, Lock, User, UserPlus, Sparkles, Factory, CheckCircle2, ArrowRight } from "lucide-react";
+import { ShieldCheck, Lock, User, UserPlus, Sparkles, Factory, CheckCircle2, ArrowRight, Eye, EyeOff } from "lucide-react";
 import Footer from "@/components/Footer";
 
 export default function LoginPage() {
@@ -13,6 +13,7 @@ export default function LoginPage() {
   // Login Form States
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   // Register Form States
   const [regName, setRegName] = useState("");
@@ -20,6 +21,7 @@ export default function LoginPage() {
   const [regEmpId, setRegEmpId] = useState("");
   const [regDepartment, setRegDepartment] = useState("Technical Sales");
   const [regPassword, setRegPassword] = useState("");
+  const [showRegPassword, setShowRegPassword] = useState(false);
 
   // Forgot Password Modal
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -271,13 +273,25 @@ export default function LoginPage() {
 
           {/* SIGN IN FORM */}
           {activeTab === "login" ? (
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4" autoComplete="off">
+              {/* Dummy hidden inputs to prevent browser auto-password suggestion & autofill */}
+              <input type="text" name="fake_user_remember" className="hidden" tabIndex={-1} autoComplete="off" />
+              <input type="password" name="fake_pass_remember" className="hidden" tabIndex={-1} autoComplete="off" />
+
               <div>
                 <label className="block text-xs font-bold uppercase text-slate-300 mb-1">
                   Email Address / Employee ID
                 </label>
                 <input
                   type="text"
+                  name="portal_user_identity"
+                  id="portal_user_identity"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck="false"
+                  data-lpignore="true"
+                  data-form-type="other"
                   required
                   placeholder="Enter Email or Employee ID"
                   value={username}
@@ -299,14 +313,33 @@ export default function LoginPage() {
                     Forgot Password?
                   </button>
                 </div>
-                <input
-                  type="password"
-                  required
-                  placeholder="Enter Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-red-500 transition"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="portal_user_security_key"
+                    id="portal_user_security_key"
+                    autoComplete="new-password"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck="false"
+                    data-lpignore="true"
+                    data-form-type="other"
+                    required
+                    placeholder="Enter Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-red-500 transition pr-11"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex={-1}
+                    aria-label="Toggle password visibility"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <button
@@ -326,11 +359,18 @@ export default function LoginPage() {
             </form>
           ) : (
             /* CREATE ACCOUNT FORM */
-            <form onSubmit={handleRegister} className="space-y-3 text-xs">
+            <form onSubmit={handleRegister} className="space-y-3 text-xs" autoComplete="off">
+              {/* Dummy hidden inputs to prevent browser auto-password suggestion & autofill */}
+              <input type="text" name="fake_reg_user" className="hidden" tabIndex={-1} autoComplete="off" />
+              <input type="password" name="fake_reg_pass" className="hidden" tabIndex={-1} autoComplete="off" />
+
               <div>
                 <label className="block font-bold uppercase text-slate-300 mb-1">Full Name *</label>
                 <input
                   type="text"
+                  name="reg_fullname"
+                  autoComplete="off"
+                  data-lpignore="true"
                   required
                   placeholder="e.g. Rahul Kumar"
                   value={regName}
@@ -343,6 +383,9 @@ export default function LoginPage() {
                 <label className="block font-bold uppercase text-slate-300 mb-1">Email Address *</label>
                 <input
                   type="email"
+                  name="reg_email_address"
+                  autoComplete="off"
+                  data-lpignore="true"
                   required
                   placeholder="rahul@strongmatechemicals.com"
                   value={regEmail}
@@ -356,6 +399,9 @@ export default function LoginPage() {
                   <label className="block font-bold uppercase text-slate-300 mb-1">Employee ID (Optional)</label>
                   <input
                     type="text"
+                    name="reg_emp_code"
+                    autoComplete="off"
+                    data-lpignore="true"
                     placeholder="e.g. SMC1025"
                     value={regEmpId}
                     onChange={(e) => setRegEmpId(e.target.value)}
@@ -366,6 +412,9 @@ export default function LoginPage() {
                   <label className="block font-bold uppercase text-slate-300 mb-1">Department</label>
                   <input
                     type="text"
+                    name="reg_dept_unit"
+                    autoComplete="off"
+                    data-lpignore="true"
                     placeholder="e.g. Technical Sales"
                     value={regDepartment}
                     onChange={(e) => setRegDepartment(e.target.value)}
@@ -376,14 +425,33 @@ export default function LoginPage() {
 
               <div>
                 <label className="block font-bold uppercase text-slate-300 mb-1">Password *</label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Minimum 8 characters"
-                  value={regPassword}
-                  onChange={(e) => setRegPassword(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-red-500"
-                />
+                <div className="relative">
+                  <input
+                    type={showRegPassword ? "text" : "password"}
+                    name="reg_password_new"
+                    id="reg_password_new"
+                    autoComplete="new-password"
+                    autoCorrect="off"
+                    autoCapitalize="none"
+                    spellCheck="false"
+                    data-lpignore="true"
+                    data-form-type="other"
+                    required
+                    placeholder="Minimum 8 characters"
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-red-500 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegPassword(!showRegPassword)}
+                    tabIndex={-1}
+                    aria-label="Toggle password visibility"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
+                  >
+                    {showRegPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
               </div>
 
               <button
@@ -402,29 +470,6 @@ export default function LoginPage() {
               </button>
             </form>
           )}
-
-          {/* Quick Demo Login Fill */}
-          <div className="mt-6 pt-5 border-t border-slate-800 text-center space-y-2">
-            <span className="text-[11px] text-slate-400 uppercase font-bold tracking-wider">
-              Quick Demo Fill Options:
-            </span>
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              <button
-                type="button"
-                onClick={() => loginAsDemo("learner")}
-                className="px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-semibold text-slate-200 border border-slate-700 transition"
-              >
-                User Login (SMC1001)
-              </button>
-              <button
-                type="button"
-                onClick={() => loginAsDemo("admin")}
-                className="px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-semibold text-red-400 border border-slate-700 transition"
-              >
-                Admin Login
-              </button>
-            </div>
-          </div>
         </div>
       </main>
 
@@ -465,6 +510,7 @@ export default function LoginPage() {
                   setForgotSubmitted(true);
                 }}
                 className="space-y-4"
+                autoComplete="off"
               >
                 <p className="text-xs text-slate-300">
                   Enter your registered SCPL employee email address or Employee ID below. The training administrator will issue password reset instructions.
@@ -476,6 +522,9 @@ export default function LoginPage() {
                   <input
                     type="text"
                     required
+                    name="forgot_account_id"
+                    autoComplete="off"
+                    data-lpignore="true"
                     placeholder="e.g. rahul@strongmatechemicals.com"
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}

@@ -66,13 +66,16 @@ export default function ForcePasswordPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
           <div>
             <label className="block text-xs font-bold uppercase text-slate-300 mb-1">
               New Password
             </label>
             <input
               type="password"
+              name="force_new_password"
+              autoComplete="new-password"
+              data-lpignore="true"
               required
               placeholder="Minimum 8 characters"
               value={newPassword}
@@ -87,6 +90,9 @@ export default function ForcePasswordPage() {
             </label>
             <input
               type="password"
+              name="force_confirm_password"
+              autoComplete="new-password"
+              data-lpignore="true"
               required
               placeholder="Re-enter password"
               value={confirmPassword}
